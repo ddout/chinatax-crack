@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	
+	<form action="/taxCrackController/check.do" id="myForm" method="post">
+		发票代码:<input name="fpdm" value="032001600311"/></br>
+		发票号码:<input name="fphm" value="37368042"/></br>
+		卡票日期:<input name="kprq" value="20170301"/></br>
+		金额:<input name="fpje"  value="820"/></br>
+		校验码:<input name="fpjym" value="558674"/></br>
+		验证码:<input name="yzm" />
+		<img width="120" height="50" src="data:image/png;base64," id="yzm_img"/>
+		<span id="yzm_img_span"></span>
+		</br>
+		<input type="submit"/>
+		</br>
+		key1:<input type="text" id="yzm_key1" /></br>
+		key2:<input type="text" id="yzm_key2" name="yzm_key2"/></br>
+		key3:<input type="text" id="yzm_key3" name="yzm_key3"/></br>
+		key4:<input type="text" id="yzm_key4" name="yzm_key4"/></br>
+	</form>
+	
+	<div style="border:1px solid red;margin-top:40px;">
+		<h4>接口简要说明</h4>
+		<p>1. 获取验证码 taxCrackController/checkBy.do</p>
+		<p>
+<pre>
+	参数:fpdm=发票代码&fphm=发票号码&kprq=开票日期(20170201)&fpje=金额&fpjym=校验码
+	其中(fpdm=发票代码&fphm=发票号码&kprq=开票日期)为必填
+	   (fpje=金额&fpjym=校验码)=根据发票数据来决定,有的就传,但至少有一项有值，不能同时为空
+</pre>
+		</p>
+		<p>2. 获取发票数据 taxCrackController/check.do</p>
+		<p>
+<pre>
+	参数:fpdm=发票代码&fphm=发票号码&kprq=开票日期(20170201)&fpje=金额&fpjym=校验码
+	    &yzm=图片验证码&yzm_key2=获取验证码的结果(key2)&yzm_key3=获取验证码的结果(key3)
+	其中(fpdm=发票代码&fphm=发票号码&kprq=开票日期&yzm_key2=&yzm_key3=&yzm=图片验证码)为必填
+	   (fpje=金额&fpjym=校验码)=根据发票数据来决定,有的就传,但至少有一项有值，不能同时为空
+</pre>
+		</p>
+		<p>3.发票数据结果为json,字段名基本都为拼音首字母(猜不出来再问)</p>
+		<p>
+<pre>
+	此页面为示例提交示例--可作为后台参考(ps:接口支持jsonp,原则上应为后台调用，也可以由html发起)
+</pre>
+		</p>		
+	</div>
+	
+	<script type="text/javascript" src="js/jquery1.7.js"></script>
+	<script type="text/javascript" src="js/jquery.form.js"></script>
+	<script type="text/javascript">
+	 	$(document).ready(function() {
+	 		$('#yzm_img').on('click',function(){
+	 			var fpdm = $('input[name=fpdm]').val();
+	 			if(fpdm == ''){
+	 				return;
+	 			}
+	 			$.get('/taxCrackController/checkBy.do?fpdm='+fpdm,function(data){
+	 			   var json = JSON.parse(data);
+            	   if(json['result'] == "SUCCESS"){
+            		   var rows = json['rows']['yzm'];
+            		   $('#yzm_img').attr('src',"data:image/png;base64," + rows['key1']);
+            		   var html = "";
+            		   var key4 = rows['key4'];
+            		   if (key4 == '00') {
+            			   html = "请输入验证码文字";
+                       } else if (key4 == '01') {
+                    	   html = "请输入验证码图片中<font color=\"red\" size=\"4\" style=\"background:#C0C0C0\">红色</font>文字";
+                       } else if (key4 == '02') {
+                    	   html = "请输入验证码图片中<font color=\"yellow\" size=\"4\" style=\"background:#C0C0C0\">黄色</font>文字";
+                       } else if (key4 == '03') {
+                    	   html = "请输入验证码图片中<font color=\"blue\" size=\"4\" style=\"background:#C0C0C0\">蓝色</font>文字";
+                       }
+            		   $('#yzm_img_span').html(html);
+            		   $('#yzm_key1').val(rows['key1']);
+            		   $('#yzm_key2').val(rows['key2']);
+            		   $('#yzm_key3').val(rows['key3']);
+            		   $('#yzm_key4').val(rows['key4']);
+            	   } else {
+            		   alert(json['msg']);
+            	   }
+	 			});
+	 		});
+	 		
+	 		
+	        $('#myForm').on('submit', function(e) {
+	            e.preventDefault(); // <-- important
+	            $(this).ajaxSubmit({
+	               success:function(data){
+	            	  console.log(data);
+	               },
+	               error:function(data){
+	            	   console.log(data);
+	               }
+	            });
+	        });
+	        
+	    });
+	</script>
+</body>
+</html>
